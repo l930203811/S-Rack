@@ -1,0 +1,481 @@
+[
+ {
+  "owner": "prenorm",
+  "tag": 16,
+  "refs": "input",
+  "type": "int",
+  "dims": [
+   8
+  ],
+  "offset": 0,
+  "count": 8,
+  "fileOff": 72
+ },
+ {
+  "owner": "dconv0",
+  "tag": 2,
+  "refs": "prenorm",
+  "type": "f32",
+  "dims": [
+   3,
+   4,
+   1,
+   16
+  ],
+  "offset": 8,
+  "count": 192,
+  "fileOff": 132
+ },
+ {
+  "owner": "datt0",
+  "tag": 19,
+  "refs": "dact0",
+  "type": "f32",
+  "dims": [
+   16,
+   16
+  ],
+  "offset": 200,
+  "count": 256,
+  "fileOff": 964
+ },
+ {
+  "owner": "datt0",
+  "tag": 19,
+  "refs": "dact0",
+  "type": "f32",
+  "dims": [
+   448,
+   16
+  ],
+  "offset": 456,
+  "count": 7168,
+  "fileOff": 1997
+ },
+ {
+  "owner": "dconv1",
+  "tag": 2,
+  "refs": "dattmult0",
+  "type": "f32",
+  "dims": [
+   3,
+   3,
+   16,
+   32
+  ],
+  "offset": 7624,
+  "count": 4608,
+  "fileOff": 30765
+ },
+ {
+  "owner": "datt1",
+  "tag": 19,
+  "refs": "dact1",
+  "type": "f32",
+  "dims": [
+   32,
+   32
+  ],
+  "offset": 12232,
+  "count": 1024,
+  "fileOff": 49261
+ },
+ {
+  "owner": "datt1",
+  "tag": 19,
+  "refs": "dact1",
+  "type": "f32",
+  "dims": [
+   224,
+   32
+  ],
+  "offset": 13256,
+  "count": 7168,
+  "fileOff": 53366
+ },
+ {
+  "owner": "dconv2",
+  "tag": 2,
+  "refs": "dattmult1",
+  "type": "f32",
+  "dims": [
+   5,
+   3,
+   32,
+   64
+  ],
+  "offset": 20424,
+  "count": 30720,
+  "fileOff": 82134
+ },
+ {
+  "owner": "datt2",
+  "tag": 19,
+  "refs": "dact2",
+  "type": "f32",
+  "dims": [
+   64,
+   64
+  ],
+  "offset": 51144,
+  "count": 4096,
+  "fileOff": 205078
+ },
+ {
+  "owner": "datt2",
+  "tag": 19,
+  "refs": "dact2",
+  "type": "f32",
+  "dims": [
+   112,
+   64
+  ],
+  "offset": 55240,
+  "count": 7168,
+  "fileOff": 221471
+ },
+ {
+  "owner": "dconv3",
+  "tag": 2,
+  "refs": "dattmult2",
+  "type": "f32",
+  "dims": [
+   2,
+   3,
+   64,
+   128
+  ],
+  "offset": 62408,
+  "count": 49152,
+  "fileOff": 250239
+ },
+ {
+  "owner": "datt3",
+  "tag": 19,
+  "refs": "dact3",
+  "type": "f32",
+  "dims": [
+   128,
+   128
+  ],
+  "offset": 111560,
+  "count": 16384,
+  "fileOff": 446911
+ },
+ {
+  "owner": "datt3",
+  "tag": 19,
+  "refs": "dact3",
+  "type": "f32",
+  "dims": [
+   56,
+   128
+  ],
+  "offset": 127944,
+  "count": 7168,
+  "fileOff": 512456
+ },
+ {
+  "owner": "dconv4",
+  "tag": 2,
+  "refs": "dattmult3",
+  "type": "f32",
+  "dims": [
+   2,
+   3,
+   128,
+   128
+  ],
+  "offset": 135112,
+  "count": 98304,
+  "fileOff": 541224
+ },
+ {
+  "owner": "datt4",
+  "tag": 19,
+  "refs": "dact4",
+  "type": "f32",
+  "dims": [
+   128,
+   128
+  ],
+  "offset": 233416,
+  "count": 16384,
+  "fileOff": 934504
+ },
+ {
+  "owner": "datt4",
+  "tag": 19,
+  "refs": "dact4",
+  "type": "f32",
+  "dims": [
+   28,
+   128
+  ],
+  "offset": 249800,
+  "count": 3584,
+  "fileOff": 1000049
+ },
+ {
+  "owner": "dconv5",
+  "tag": 2,
+  "refs": "dattmult4",
+  "type": "f32",
+  "dims": [
+   8,
+   1,
+   128,
+   128
+  ],
+  "offset": 253384,
+  "count": 131072,
+  "fileOff": 1014481
+ },
+ {
+  "owner": "dact5",
+  "tag": 5,
+  "refs": "dconv5,bndense",
+  "type": "f32",
+  "dims": [
+   28,
+   28,
+   128
+  ],
+  "offset": 384456,
+  "count": 100352,
+  "fileOff": 1538835
+ },
+ {
+  "owner": "dact5",
+  "tag": 5,
+  "refs": "dconv5,bndense",
+  "type": "f32",
+  "dims": [
+   28,
+   128
+  ],
+  "offset": 484808,
+  "count": 3584,
+  "fileOff": 1940256
+ },
+ {
+  "owner": "uconv5",
+  "tag": 3,
+  "refs": "bnact",
+  "type": "f32",
+  "dims": [
+   1,
+   1,
+   128,
+   128
+  ],
+  "offset": 488392,
+  "count": 16384,
+  "fileOff": 1954644
+ },
+ {
+  "owner": "uatt4",
+  "tag": 19,
+  "refs": "uconcat5",
+  "type": "f32",
+  "dims": [
+   256,
+   256
+  ],
+  "offset": 504776,
+  "count": 65536,
+  "fileOff": 2020285
+ },
+ {
+  "owner": "uatt4",
+  "tag": 19,
+  "refs": "uconcat5",
+  "type": "f32",
+  "dims": [
+   28,
+   256
+  ],
+  "offset": 570312,
+  "count": 7168,
+  "fileOff": 2282438
+ },
+ {
+  "owner": "uconv4",
+  "tag": 3,
+  "refs": "uattmult4",
+  "type": "f32",
+  "dims": [
+   2,
+   3,
+   128,
+   256
+  ],
+  "offset": 577480,
+  "count": 196608,
+  "fileOff": 2311209
+ },
+ {
+  "owner": "uatt3",
+  "tag": 19,
+  "refs": "uconcat4",
+  "type": "f32",
+  "dims": [
+   256,
+   256
+  ],
+  "offset": 774088,
+  "count": 65536,
+  "fileOff": 3097746
+ },
+ {
+  "owner": "uatt3",
+  "tag": 19,
+  "refs": "uconcat4",
+  "type": "f32",
+  "dims": [
+   56,
+   256
+  ],
+  "offset": 839624,
+  "count": 14336,
+  "fileOff": 3359899
+ },
+ {
+  "owner": "uconv3",
+  "tag": 3,
+  "refs": "uattmult3",
+  "type": "f32",
+  "dims": [
+   2,
+   3,
+   64,
+   256
+  ],
+  "offset": 853960,
+  "count": 98304,
+  "fileOff": 3417342
+ },
+ {
+  "owner": "uatt2",
+  "tag": 19,
+  "refs": "uconcat3",
+  "type": "f32",
+  "dims": [
+   128,
+   128
+  ],
+  "offset": 952264,
+  "count": 16384,
+  "fileOff": 3810663
+ },
+ {
+  "owner": "uatt2",
+  "tag": 19,
+  "refs": "uconcat3",
+  "type": "f32",
+  "dims": [
+   112,
+   128
+  ],
+  "offset": 968648,
+  "count": 14336,
+  "fileOff": 3876208
+ },
+ {
+  "owner": "uconv2",
+  "tag": 3,
+  "refs": "uattmult2",
+  "type": "f32",
+  "dims": [
+   3,
+   3,
+   32,
+   128
+  ],
+  "offset": 982984,
+  "count": 36864,
+  "fileOff": 3933651
+ },
+ {
+  "owner": "uatt1",
+  "tag": 19,
+  "refs": "uconcat2",
+  "type": "f32",
+  "dims": [
+   64,
+   64
+  ],
+  "offset": 1019848,
+  "count": 4096,
+  "fileOff": 4081212
+ },
+ {
+  "owner": "uatt1",
+  "tag": 19,
+  "refs": "uconcat2",
+  "type": "f32",
+  "dims": [
+   224,
+   64
+  ],
+  "offset": 1023944,
+  "count": 14336,
+  "fileOff": 4097605
+ },
+ {
+  "owner": "uconv1",
+  "tag": 3,
+  "refs": "uattmult1",
+  "type": "f32",
+  "dims": [
+   3,
+   3,
+   16,
+   64
+  ],
+  "offset": 1038280,
+  "count": 9216,
+  "fileOff": 4155048
+ },
+ {
+  "owner": "uatt0",
+  "tag": 19,
+  "refs": "uconcat1",
+  "type": "f32",
+  "dims": [
+   32,
+   32
+  ],
+  "offset": 1047496,
+  "count": 1024,
+  "fileOff": 4192017
+ },
+ {
+  "owner": "uatt0",
+  "tag": 19,
+  "refs": "uconcat1",
+  "type": "f32",
+  "dims": [
+   448,
+   32
+  ],
+  "offset": 1048520,
+  "count": 14336,
+  "fileOff": 4196122
+ },
+ {
+  "owner": "uconv0",
+  "tag": 3,
+  "refs": "uattmult0",
+  "type": "f32",
+  "dims": [
+   3,
+   4,
+   1,
+   32
+  ],
+  "offset": 1062856,
+  "count": 384,
+  "fileOff": 4253565
+ }
+]

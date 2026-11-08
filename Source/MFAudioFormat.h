@@ -18,41 +18,66 @@ extern std::function<void (const juce::String&)> mfDebugLog;
 #include <mfreadwrite.h>
 #include <objbase.h>
 
+// Media Foundation 要求每个接触 MF 对象的线程都显式 CoInitializeEx(MTA)。
+// VST 宿主的音频线程通常根本没有初始化 COM，而 reader 又在消息线程创建，
+// 于是 IMFSourceReader 的虚调用跨 apartment 直接落到未初始化线程 ——
+// 崩溃转储里 combase.dll 一串回溯 + 0xc0000005 就是这么来的（Standalone 反而少崩）。
+// 用 thread_local 每线程初始化一次；故意不配 CoUninitialize：
+// 线程退出时 COM 自行清理，也避免 DLL 卸载后 TLS 析构跳到已释放代码。
+inline bool ensureMfCom()
+{
+    static thread_local const HRESULT hr = [] () -> HRESULT
+    {
+        const HRESULT h = ::CoInitializeEx (nullptr, COINIT_MULTITHREADED);
+        if (h == RPC_E_CHANGED_MODE)
+            MFLOG ("MF: warning - thread already initialized as STA; MF reader must stay in one apartment");
+        return h;
+    }();
+    return hr == S_OK || hr == S_FALSE;
+}
+
 class MFAudioFormatReader : public juce::AudioFormatReader
 {
 public:
     static MFAudioFormatReader* create (const juce::File& file)
     {
-        // MF 完整模式启动（LITE 模式不加载部分解码器管线，HE-AAC 的 SBR 展开会缺失）
-        HRESULT hr = MFStartup (MF_VERSION, 0);
-        if (FAILED (hr))
-        {
-            // COM 未初始化的场景：先初始化 MTA 再重试
-            CoInitializeEx (nullptr, COINIT_MULTITHREADED);
-            hr = MFStartup (MF_VERSION, 0);
+        // MF 是进程级引用计数资源，宿主自身往往也在用。旧实现每个 reader 各调一次
+        // MFStartup，并在析构（可能发生在音频线程）里 MFShutdown；initOutput 失败时
+        // 还会「析构一次 + 显式一次」双重 Shutdown。这会关掉整个进程的 MF 管线、
+        // 或让音频线程阻塞在 MFShutdown 的异步收尾上 —— 宿主闪退的直接原因。
+        // 改为进程内一次性启动，reader 只负责释放自己的 IMFSourceReader。
+        // 创建线程必须先进入 MTA，否则 reader 会被绑到 STA/未初始化公寓。
+        ensureMfCom();
+        static const bool mfReady = [] {
+            HRESULT hr = MFStartup (MF_VERSION, 0);
+            if (FAILED (hr))
+            {
+                MFLOG ("MF: MFStartup retry after COM init hr=0x" + juce::String::toHexString ((int) hr));
+                hr = MFStartup (MF_VERSION, 0);
+            }
             if (FAILED (hr))
             {
                 MFLOG ("MF: MFStartup failed hr=0x" + juce::String::toHexString ((int) hr));
-                return nullptr;
+                return false;
             }
-        }
+            return true;
+        }();
+        if (! mfReady) return nullptr;
 
         IMFSourceReader* r = nullptr;
-        hr = MFCreateSourceReaderFromURL (file.getFullPathName().toWideCharPointer(), nullptr, &r);
+        HRESULT hr = MFCreateSourceReaderFromURL (file.getFullPathName().toWideCharPointer(), nullptr, &r);
         if (FAILED (hr) || r == nullptr)
         {
             MFLOG ("MF: CreateSourceReader failed hr=0x" + juce::String::toHexString ((int) hr)
                    + " file=" + file.getFullPathName());
-            MFShutdown();
             return nullptr;
         }
 
-        auto* reader = new MFAudioFormatReader (r, true, file.getFullPathName());
+        auto* reader = new MFAudioFormatReader (r, false, file.getFullPathName());
         if (! reader->initOutput (file))
         {
             MFLOG ("MF: initOutput failed for " + file.getFullPathName());
             delete reader;
-            MFShutdown();
             return nullptr;
         }
         MFLOG (juce::String::formatted ("MF: reader ok sr=%.0f ch=%u len=%lld",
@@ -63,10 +88,12 @@ public:
 
     ~MFAudioFormatReader() override
     {
+        // reader 常在音频线程被 delete，该线程也必须先初始化 COM
+        ensureMfCom();
         if (sourceReader != nullptr)
             sourceReader->Release();
-        if (mfStarted)
-            MFShutdown();
+        // 绝不在此调用 MFShutdown()：reader 会在音频线程被 delete，
+        // MFShutdown 需要等待异步工作项收尾，会造成音频回调卡死 / 宿主崩溃。
     }
 
     // 供播放引擎判断未知时长文件的真实 EOF（音频线程调用）
@@ -109,11 +136,14 @@ private:
             while (! eof && total < cap)
             {
                 decodeChunk();
-                // 计入本次新增帧并消费掉（避免重复累计）
-                const size_t avail = interleaved.size() / srcCh - framePos;
+                // 计入本次新增帧并消费掉（避免重复累计）。
+                // 用有符号差值：size_t 直接相减一旦下溢会得到天文数字，
+                // 随后的 erase(begin + huge) 就是一次实打实的堆越界写。
+                const size_t framesTotal = interleaved.size() / srcCh;
+                const size_t avail = (framePos <= framesTotal) ? framesTotal - framePos : 0;
                 total += (juce::int64) avail;
                 framePos += avail;
-                if (framePos > 0)
+                if (framePos > 0 && framePos <= framesTotal)
                 {
                     interleaved.erase (interleaved.begin(),
                                        interleaved.begin() + (std::ptrdiff_t) (framePos * srcCh));
@@ -293,6 +323,7 @@ private:
 
     void appendSample (IMFSample* sample)
     {
+        if (numChannels == 0 || bytesPerFrame == 0) return;   // 防除零
         IMFMediaBuffer* buf = nullptr;
         if (SUCCEEDED (sample->ConvertToContiguousBuffer (&buf)))
         {
@@ -398,7 +429,7 @@ private:
         int emptyRuns = 0;
         while (! eof && skipped < toSkip)
         {
-            if (framePos > 0)
+            if (framePos > 0 && framePos <= interleaved.size() / numChannels)
             {
                 interleaved.erase (interleaved.begin(),
                                    interleaved.begin() + (std::ptrdiff_t) (framePos * numChannels));
@@ -435,11 +466,26 @@ private:
 
     void ensureFrames (int need)
     {
-        while (((size_t) interleaved.size() / numChannels - framePos) < (size_t) need && ! eof)
-            decodeChunk();
+        // 用有符号差值：旧写法 interleaved.size()/numChannels - framePos 是 size_t，
+        // 一旦 framePos 大于缓冲帧数就下溢成天文数字，循环直接跳过解码，
+        // 随后 readSamples 会算出巨大的 take 并越界读写 → 宿主崩溃 / 100% CPU。
+        const auto availableFrames = [this] () -> juce::int64
+        {
+            return (juce::int64) (interleaved.size() / numChannels)
+                 - (juce::int64) framePos;
+        };
 
-        // 已消费过半就整理缓冲，防止无限增长
-        if (framePos > 65536)
+        int emptyRuns = 0;
+        while (availableFrames() < (juce::int64) need && ! eof && emptyRuns < 64)
+        {
+            const size_t before = interleaved.size();
+            decodeChunk();
+            // 解码器偶发「返回成功但零帧」：没有上限就是满 CPU 死循环
+            emptyRuns = (interleaved.size() == before) ? emptyRuns + 1 : 0;
+        }
+
+        // 已消费过半就整理缓冲，防止无限增长（索引合法性先校验）
+        if (framePos > 65536 && (size_t) framePos <= interleaved.size() / numChannels)
         {
             interleaved.erase (interleaved.begin(),
                                interleaved.begin() + (std::ptrdiff_t) (framePos * numChannels));
@@ -447,10 +493,22 @@ private:
         }
     }
 
+    // float -> 左对齐 int32。
+    // 旧写法 (int)(v * 2147483647.0f) 在 v=±1 时会得到 float 的 2^31，
+    // 转 int 是未定义行为（MSVC 上常变成 INT_MIN），峰值符号直接翻转 → 满幅爆音。
+    // 用 double 计算并夹在 ±INT_MAX 之内，彻底消除溢出。
+    static int toInt32Sample (float v) noexcept
+    {
+        const double d = (double) juce::jlimit (-1.0f, 1.0f, v) * 2147483647.0;
+        return (int) juce::jlimit (-2147483647.0, 2147483647.0, d);
+    }
+
     bool readSamples (int* const* destChannels, int numDestChannels,
                       int startOffsetInDestBuffer, juce::int64 startSampleInFile,
                       int numSamples) override
     {
+        // 宿主音频线程首次调用时补上 MTA 初始化
+        ensureMfCom();
         const size_t srcCh = numChannels;
         int written = 0;
         juce::int64 filePos = startSampleInFile;
@@ -471,8 +529,7 @@ private:
                 int* dst = destChannels[ch] + startOffsetInDestBuffer + written;
                 const float* base = tail.data() + skip * srcCh;
                 for (int i = 0; i < take; ++i)
-                    dst[i] = (int) (juce::jlimit (-1.0f, 1.0f,
-                        base[(size_t) i * srcCh + s]) * 2147483647.0f);
+                    dst[i] = toInt32Sample (base[(size_t) i * srcCh + s]);
             }
             written += take;
             filePos += take;
@@ -501,9 +558,11 @@ private:
             while (written < numSamples)
             {
                 ensureFrames (numSamples - written);
-                const size_t avail = (size_t) interleaved.size() / srcCh - framePos;
-                if (avail == 0)
-                    break;   // EOF
+                const juce::int64 framesTotal = (juce::int64) (interleaved.size() / srcCh);
+                const juce::int64 avail64 = framesTotal - (juce::int64) framePos;
+                if (avail64 <= 0)
+                    break;   // EOF 或缓冲状态异常：绝不越界读
+                const size_t avail = (size_t) avail64;
 
                 const int take = (int) std::min<juce::int64> ((juce::int64) (numSamples - written),
                                                               (juce::int64) avail);
@@ -513,11 +572,8 @@ private:
                     const size_t s = (srcCh == 1) ? 0 : juce::jmin ((size_t) ch, srcCh - 1);
                     int* dst = destChannels[ch] + startOffsetInDestBuffer + written;
                     for (int i = 0; i < take; ++i)
-                    {
-                        const float v = juce::jlimit (-1.0f, 1.0f,
+                        dst[i] = toInt32Sample (
                             interleaved[(size_t) (framePos + i) * srcCh + s]);
-                        dst[i] = (int) (v * 2147483647.0f);
-                    }
                 }
 
                 rememberTail (&interleaved[(size_t) framePos * srcCh], (size_t) take, currentPos);

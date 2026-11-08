@@ -11,7 +11,7 @@ set "LIB=%MSVC%\lib\x64;%SDK%\Lib\%SDKVER%\ucrt\x64;%SDK%\Lib\%SDKVER%\um\x64"
 
 set "CMAKE=%VSROOT%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"
 
-"%CMAKE%" -G Ninja -B "D:\Xiangmu\VstMediaPlayer\build" -S "D:\Xiangmu\VstMediaPlayer" -DCMAKE_BUILD_TYPE=Release %*
+"%CMAKE%" -G Ninja -B "D:\Xiangmu\S-Rack\build" -S "D:\Xiangmu\S-Rack" -DCMAKE_BUILD_TYPE=Release %*
 if errorlevel 1 exit /b 1
 
-"%CMAKE%" --build "D:\Xiangmu\VstMediaPlayer\build" --config Release --target VstMediaPlayer_VST3 VstMediaPlayer_Standalone %*
+"%CMAKE%" --build "D:\Xiangmu\S-Rack\build" --config Release --target VstMediaPlayer_VST3 VstMediaPlayer_Standalone AudioDump SepVerify %*

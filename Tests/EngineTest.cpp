@@ -27,7 +27,7 @@ int main (int argc, char** argv)
     else
     {
         // 生成 2 秒 440Hz 正弦 WAV（44100Hz / 16bit / 单声道）
-        testFile = juce::File ("D:/Xiangmu/VstMediaPlayer/testtone.wav");
+        testFile = juce::File ("D:/Xiangmu/S-Rack/testtone.wav");
         testFile.deleteFile();
     {
         juce::WavAudioFormat fmt;
