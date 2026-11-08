@@ -4,7 +4,9 @@
 
 > **v1.0.0** · Windows x64 · VST3 效果器插件 + 独立播放器 · JUCE 8 / C++17
 
-![S-Rack 界面（早期布局版本）](docs/screenshot.png)
+![S-Rack 简体中文界面（v1.0.0）](docs/screenshot-zh-CN.png)
+
+[English UI 截图](docs/screenshot-en.png)
 
 S-Rack 是一款赛博朋克风格的音频播放器，提供两种形态：
 
@@ -120,7 +122,7 @@ Assets/                 S-Rack 图标 + generate_icon.py
 ThirdParty/             JUCE、ORT、kissfft、MDX 模型（不入库）
 Tools/                  AudioDump / SepVerify / 模型分析脚本与权重
 Tests/                  引擎测试与样例音频
-docs/                   截图
+docs/                   界面截图（中文 / 英文 + 早期版本）
 CMakeLists.txt          构建定义（工程版本 1.0.0）
 build.bat               MSVC 环境 + 配置 + 构建
 ```

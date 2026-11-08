@@ -4,7 +4,9 @@
 
 > **v1.0.0** · Windows x64 · VST3 effect plugin + standalone player · JUCE 8 / C++17
 
-![S-Rack UI (earlier layout revision)](docs/screenshot.png)
+![S-Rack English UI (v1.0.0)](docs/screenshot-en.png)
+
+[简体中文界面截图](docs/screenshot-zh-CN.png)
 
 S-Rack is a cyberpunk-styled music player that ships in two forms:
 
@@ -123,7 +125,7 @@ Assets/                 S-Rack icons + generate_icon.py
 ThirdParty/             JUCE, ORT, kissfft, MDX model (git-ignored)
 Tools/                  AudioDump / SepVerify / model analysis scripts + weights
 Tests/                  engine test + sample media
-docs/                   screenshot
+docs/                   UI screenshots (zh-CN / en + earlier layout)
 CMakeLists.txt          build definition (project version 1.0.0)
 build.bat               MSVC environment + configure + build
 ```
