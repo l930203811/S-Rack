@@ -305,7 +305,34 @@ public:
     void paint (juce::Graphics& g) override
     {
         auto& lyr = proc.getLyrics();
-        if (! lyr.isLoaded()) return;
+
+        // 歌词已开启（本浮层仅在开启时可见），但未匹配到同名 .lrc 时，
+        // 在歌词区直接给出中/英文提示，避免「开了歌词却一片空白」的困惑。
+        if (! lyr.isLoaded())
+        {
+            const auto b = getLocalBounds().toFloat();
+            const bool hasTrack = proc.getCurrentTrackIndex() >= 0;
+            if (hasTrack)
+            {
+                g.setColour (juce::Colour (0xff9fd0dd));
+                g.setFont (juce::Font (juce::FontOptions ("Microsoft YaHei UI", 13.0f, juce::Font::plain)));
+                g.drawText (MediaPlayAudioProcessor::zh ("未找到歌词文件"),
+                            juce::Rectangle<float> (0.0f, b.getY(), b.getWidth(), b.getHeight() * 0.52f),
+                            juce::Justification::centred);
+                g.setColour (juce::Colour (0xff66808f));
+                g.setFont (juce::Font (juce::FontOptions ("Microsoft YaHei UI", 10.5f, juce::Font::plain)));
+                g.drawText (MediaPlayAudioProcessor::zh ("把同名 .lrc 放到歌曲同目录"),
+                            juce::Rectangle<float> (0.0f, b.getY() + b.getHeight() * 0.52f, b.getWidth(), b.getHeight() * 0.48f),
+                            juce::Justification::centred);
+            }
+            else
+            {
+                g.setColour (juce::Colour (0xff9fd0dd));
+                g.setFont (juce::Font (juce::FontOptions ("Microsoft YaHei UI", 13.0f, juce::Font::plain)));
+                g.drawText (MediaPlayAudioProcessor::zh ("未加载曲目"), b, juce::Justification::centred);
+            }
+            return;
+        }
 
         const double t = proc.getCurrentPosition();
         const int cur = lyr.lineIndexAt (t);

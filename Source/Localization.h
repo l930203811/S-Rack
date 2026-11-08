@@ -102,6 +102,8 @@ namespace L10n
             { " · 输出目录：",                  " · Output folder: " },
             { "（未加载曲目）",                 "(no track loaded)" },
             { "未加载曲目",                     "No track loaded" },
+            { "未找到歌词文件",                 "Lyrics file not found" },
+            { "把同名 .lrc 放到歌曲同目录",     "Put a same-name .lrc next to the song" },
             { "已分离 · ",                      "Separated · " },
             { "尚未分离 · ",                    "Not separated · " },
             { "上一轮分离正在退出，请稍后重试", "Previous separation is stopping, please retry" },
